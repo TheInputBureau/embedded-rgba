@@ -10,8 +10,8 @@ pub struct Framebuffer<C: RgbColor, const N: usize> {
 
 impl<C: RgbColor, const N: usize> Framebuffer<C, N> {
     #[inline]
-    pub fn new(width: u32, height: u32) -> Self {
-        debug_assert_eq!(N as u32, width * height, "N must be width*height");
+    pub const fn new(width: u32, height: u32) -> Self {
+        // debug_assert_eq!(N as u32, width * height, "N must be width*height");
         Self {
             buf: [C::BLACK; N],
             width,

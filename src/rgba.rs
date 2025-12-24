@@ -73,9 +73,14 @@ impl Blend<Rgb565> for Rgba<Rgb565> {
         let bb = b & 0x1F;
 
         // Blend in native bit depth (5/6/5) using exact div-by-255 trick.
-        let r = (br + mul_blend_u8(fr.wrapping_sub(br), a)) & 0x1F;
-        let g = (bgc + mul_blend_u8(fg.wrapping_sub(bgc), a)) & 0x3F;
-        let bl = (bb + mul_blend_u8(fb.wrapping_sub(bb), a)) & 0x1F;
+        // Formula: result = bg + (fg - bg) * alpha / 255
+        let dr = fr as i32 - br as i32;
+        let dg = fg as i32 - bgc as i32;
+        let db = fb as i32 - bb as i32;
+
+        let r = (br as i32 + (dr * a as i32 / 255)) as u32 & 0x1F;
+        let g = (bgc as i32 + (dg * a as i32 / 255)) as u32 & 0x3F;
+        let bl = (bb as i32 + (db * a as i32 / 255)) as u32 & 0x1F;
 
         let out = ((r << 11) | (g << 5) | bl) as u16;
         Rgb565::from(RawU16::new(out))
@@ -93,17 +98,17 @@ impl Blend<Rgb888> for Rgba<Rgb888> {
             return self.rgb();
         }
 
-        let fr = self.rgb().r() as u32;
-        let fg = self.rgb().g() as u32;
-        let fb = self.rgb().b() as u32;
+        let fr = self.rgb().r() as i32;
+        let fg = self.rgb().g() as i32;
+        let fb = self.rgb().b() as i32;
 
-        let br = bg.r() as u32;
-        let bgc = bg.g() as u32;
-        let bb = bg.b() as u32;
+        let br = bg.r() as i32;
+        let bgc = bg.g() as i32;
+        let bb = bg.b() as i32;
 
-        let r = (br + mul_blend_u8(fr.wrapping_sub(br), a)) as u8;
-        let g = (bgc + mul_blend_u8(fg.wrapping_sub(bgc), a)) as u8;
-        let b = (bb + mul_blend_u8(fb.wrapping_sub(bb), a)) as u8;
+        let r = (br + (fr - br) * a as i32 / 255) as u8;
+        let g = (bgc + (fg - bgc) * a as i32 / 255) as u8;
+        let b = (bb + (fb - bb) * a as i32 / 255) as u8;
 
         Rgb888::new(r, g, b)
     }
@@ -120,17 +125,17 @@ impl Blend<Rgb666> for Rgba<Rgb666> {
             return self.rgb();
         }
 
-        let fr = self.rgb().r() as u32; // 0..63
-        let fg = self.rgb().g() as u32; // 0..63
-        let fb = self.rgb().b() as u32; // 0..63
+        let fr = self.rgb().r() as i32; // 0..63
+        let fg = self.rgb().g() as i32; // 0..63
+        let fb = self.rgb().b() as i32; // 0..63
 
-        let br = bg.r() as u32;
-        let bgc = bg.g() as u32;
-        let bb = bg.b() as u32;
+        let br = bg.r() as i32;
+        let bgc = bg.g() as i32;
+        let bb = bg.b() as i32;
 
-        let r = (br + mul_blend_u8(fr.wrapping_sub(br), a)) as u8; // 0..63
-        let g = (bgc + mul_blend_u8(fg.wrapping_sub(bgc), a)) as u8;
-        let b = (bb + mul_blend_u8(fb.wrapping_sub(bb), a)) as u8;
+        let r = (br + (fr - br) * a as i32 / 255) as u8; // 0..63
+        let g = (bgc + (fg - bgc) * a as i32 / 255) as u8;
+        let b = (bb + (fb - bb) * a as i32 / 255) as u8;
 
         Rgb666::new(r, g, b)
     }

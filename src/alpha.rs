@@ -39,15 +39,14 @@ where
     where
         I: IntoIterator<Item = Pixel<Self::Color>>,
     {
-        let w_u32 = self.buffer.width as u32;
-        let h_u32 = self.buffer.height as u32;
         let w = self.buffer.width;
+        let h = self.buffer.height;
         let buf = self.buffer.buf_mut();
 
         for Pixel(p, fg) in pixels {
             let x = p.x as u32;
             let y = p.y as u32;
-            if x < w_u32 && y < h_u32 {
+            if x < w && y < h {
                 let idx = (y * w + x) as usize;
                 let bg = buf[idx];
                 buf[idx] = fg.blend(bg);

@@ -29,7 +29,7 @@ impl<C, const N: usize> DoubleBuffer<C, N>
 where
     C: RgbColor,
 {
-    pub fn new(width: u32, height: u32) -> Self {
+    pub const fn new(width: u32, height: u32) -> Self {
         Self {
             current: Framebuffer::new(width, height),
             reference: Framebuffer::new(width, height),
@@ -116,7 +116,7 @@ impl<C, const N: usize> SingleBuffer<C, N>
 where
     C: RgbColor,
 {
-    pub fn new(width: u32, height: u32) -> Self {
+    pub const fn new(width: u32, height: u32) -> Self {
         Self {
             current: Framebuffer::new(width, height),
         }
@@ -202,7 +202,7 @@ where
     S: BufferStrategy<Color = T::Color>,
 {
     /// Construct a canvas from an explicit strategy.
-    pub fn with_strategy(target: &'a mut T, strategy: S) -> Self {
+    pub const fn with_strategy(target: &'a mut T, strategy: S) -> Self {
         Self { strategy, target }
     }
 
@@ -226,9 +226,8 @@ where
     C: RgbColor,
     T: DrawTarget<Color = C>,
 {
-    pub fn double_buffered(target: &'a mut T) -> Self {
-        let size = target.bounding_box().size;
-        Self::with_strategy(target, DoubleBuffer::new(size.width, size.height))
+    pub const fn double_buffered(target: &'a mut T, width: u32, height: u32) -> Self {
+        Self::with_strategy(target, DoubleBuffer::new(width, height))
     }
 }
 
@@ -237,9 +236,8 @@ where
     C: RgbColor,
     T: DrawTarget<Color = C>,
 {
-    pub fn single_buffered(target: &'a mut T) -> Self {
-        let size = target.bounding_box().size;
-        Self::with_strategy(target, SingleBuffer::new(size.width, size.height))
+    pub const fn single_buffered(target: &'a mut T, width: u32, height: u32) -> Self {
+        Self::with_strategy(target, SingleBuffer::new(width, height))
     }
 }
 
