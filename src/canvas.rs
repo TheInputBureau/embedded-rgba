@@ -290,3 +290,108 @@ where
         self.strategy.clear(color)
     }
 }
+
+pub struct OwnedCanvas<T, S>
+where
+    T: DrawTarget,
+    S: BufferStrategy<Color = T::Color>,
+{
+    strategy: S,
+    target: T,
+}
+
+
+impl<T, S> OwnedCanvas<T, S>
+where
+    T: DrawTarget,
+    S: BufferStrategy<Color = T::Color>,
+{
+    /// Construct a canvas from an explicit strategy.
+    pub const fn with_strategy(target: T, strategy: S) -> Self {
+        Self { strategy, target }
+    }
+
+    pub fn flush(&mut self) -> Result<(), T::Error> {
+        self.strategy.flush(&mut self.target)
+    }
+}
+
+impl<T, S> OriginDimensions for OwnedCanvas<T, S>
+where
+    T: DrawTarget + OriginDimensions,
+    S: BufferStrategy<Color = T::Color>,
+{
+    fn size(&self) -> Size {
+        self.target.size()
+    }
+}
+
+impl<T, C, const N: usize> OwnedCanvas<T, DoubleBuffer<C, N>>
+where
+    C: RgbColor,
+    T: DrawTarget<Color = C>,
+{
+    pub const fn double_buffered(target: T, width: u32, height: u32) -> Self {
+        Self::with_strategy(target, DoubleBuffer::new(width, height))
+    }
+}
+
+impl<T, C, const N: usize> OwnedCanvas<T, SingleBuffer<C, N>>
+where
+    C: RgbColor,
+    T: DrawTarget<Color = C>,
+{
+    pub const fn single_buffered(target: T, width: u32, height: u32) -> Self {
+        Self::with_strategy(target, SingleBuffer::new(width, height))
+    }
+}
+
+impl<T, S> OwnedCanvas<T, S>
+where
+    T: DrawTarget,
+    S: BufferStrategy<Color = T::Color>,
+    T::Color: RgbColor,
+    Rgba<S::Color>: Blend<S::Color>,
+{
+    pub fn alpha<const N: usize>(&mut self) -> AlphaCanvas<'_, S::Color, N>
+    where
+        S: HasFramebuffer<S::Color, N>,
+    {
+        AlphaCanvas::new(self.strategy.current_mut())
+    }
+}
+
+impl<T, S> DrawTarget for OwnedCanvas<T, S>
+where
+    T: DrawTarget + OriginDimensions,
+    S: BufferStrategy<Color = T::Color>,
+{
+    type Error = S::Error;
+    type Color = S::Color;
+
+    #[inline(always)]
+    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), S::Error>
+    where
+        I: IntoIterator<Item = Pixel<Self::Color>>,
+    {
+        self.strategy.draw_iter(pixels)
+    }
+
+    #[inline(always)]
+    fn fill_contiguous<I>(&mut self, area: &Rectangle, colors: I) -> Result<(), S::Error>
+    where
+        I: IntoIterator<Item = Self::Color>,
+    {
+        self.strategy.fill_contiguous(area, colors)
+    }
+
+    #[inline(always)]
+    fn fill_solid(&mut self, area: &Rectangle, color: Self::Color) -> Result<(), S::Error> {
+        self.strategy.fill_solid(area, color)
+    }
+
+    #[inline(always)]
+    fn clear(&mut self, color: Self::Color) -> Result<(), S::Error> {
+        self.strategy.clear(color)
+    }
+}
