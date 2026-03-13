@@ -25,6 +25,20 @@ where
     reference: Framebuffer<C, N>,
 }
 
+#[cfg(feature = "alloc")]
+impl<C, const N: usize> DoubleBuffer<C, N>
+where
+    C: RgbColor,
+{
+    pub fn new(width: u32, height: u32) -> Self {
+        Self {
+            current: Framebuffer::new(width, height),
+            reference: Framebuffer::new(width, height),
+        }
+    }
+}
+
+#[cfg(not(feature = "alloc"))]
 impl<C, const N: usize> DoubleBuffer<C, N>
 where
     C: RgbColor,
@@ -112,6 +126,19 @@ where
     current: Framebuffer<C, N>,
 }
 
+#[cfg(feature = "alloc")]
+impl<C, const N: usize> SingleBuffer<C, N>
+where
+    C: RgbColor,
+{
+    pub fn new(width: u32, height: u32) -> Self {
+        Self {
+            current: Framebuffer::new(width, height),
+        }
+    }
+}
+
+#[cfg(not(feature = "alloc"))]
 impl<C, const N: usize> SingleBuffer<C, N>
 where
     C: RgbColor,
@@ -225,6 +252,18 @@ where
     }
 }
 
+#[cfg(feature = "alloc")]
+impl<T, C, const N: usize> Canvas<T, DoubleBuffer<C, N>>
+where
+    C: RgbColor,
+    T: DrawTarget<Color = C>,
+{
+    pub fn double_buffered(target: T, width: u32, height: u32) -> Self {
+        Self::with_strategy(target, DoubleBuffer::new(width, height))
+    }
+}
+
+#[cfg(not(feature = "alloc"))]
 impl<T, C, const N: usize> Canvas<T, DoubleBuffer<C, N>>
 where
     C: RgbColor,
@@ -235,6 +274,18 @@ where
     }
 }
 
+#[cfg(feature = "alloc")]
+impl<T, C, const N: usize> Canvas<T, SingleBuffer<C, N>>
+where
+    C: RgbColor,
+    T: DrawTarget<Color = C>,
+{
+    pub fn single_buffered(target: T, width: u32, height: u32) -> Self {
+        Self::with_strategy(target, SingleBuffer::new(width, height))
+    }
+}
+
+#[cfg(not(feature = "alloc"))]
 impl<T, C, const N: usize> Canvas<T, SingleBuffer<C, N>>
 where
     C: RgbColor,

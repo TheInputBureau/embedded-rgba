@@ -9,3 +9,6 @@ pub use alpha::*;
 pub use canvas::*;
 use framebuffer::*;
 pub use rgba::*;
+
+#[cfg(feature = "alloc")]
+extern crate alloc;

@@ -2,12 +2,54 @@ use core::convert::Infallible;
 use embedded_graphics_core::prelude::*;
 use embedded_graphics_core::primitives::*;
 
+#[cfg(feature = "alloc")]
+pub struct Framebuffer<C: RgbColor, const N: usize> {
+    buf: alloc::vec::Vec<C>,
+    pub width: u32,
+    pub height: u32,
+}
+
+#[cfg(not(feature = "alloc"))]
 pub struct Framebuffer<C: RgbColor, const N: usize> {
     buf: [C; N],
     pub width: u32,
     pub height: u32,
 }
 
+#[cfg(feature = "alloc")]
+impl<C: RgbColor, const N: usize> Framebuffer<C, N> {
+    #[inline]
+    pub fn new(width: u32, height: u32) -> Self {
+        // debug_assert_eq!(N as u32, width * height, "N must be width*height");
+        Self {
+            buf: alloc::vec![C::BLACK; N],
+            width,
+            height,
+        }
+    }
+
+    #[inline]
+    pub fn iter_colors(&self) -> impl Iterator<Item = C> + '_ {
+        self.buf.iter().copied()
+    }
+
+    #[inline]
+    pub fn buf(&self) -> &[C] {
+        &self.buf
+    }
+
+    #[inline]
+    pub(super) fn buf_mut(&mut self) -> &mut [C] {
+        &mut self.buf
+    }
+
+    #[inline]
+    fn idx(&self, x: usize, y: usize) -> usize {
+        y * self.width as usize + x
+    }
+}
+
+#[cfg(not(feature = "alloc"))]
 impl<C: RgbColor, const N: usize> Framebuffer<C, N> {
     #[inline]
     pub const fn new(width: u32, height: u32) -> Self {
